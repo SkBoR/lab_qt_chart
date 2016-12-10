@@ -12,6 +12,7 @@
 #include <QStringRef>
 #include <QList>
 #include <QStringList>
+#include "parser.h"
 
 using namespace QtCharts;
 
@@ -40,6 +41,9 @@ int main(int argc, char *argv[])
 
     QTextStream in(&file);
     QString result = in.readAll();
+
+    Parser parser;
+    parser.parse(result);
 
 
     QStringRef *toParse;
@@ -74,13 +78,13 @@ int main(int argc, char *argv[])
             double value = values.toDouble();
 //            *series << QPointF()
                        series->append((float)time, (float)value);
-            qDebug() << "time: " << time;
-            qDebug() << "value: " << value;
-            qDebug() << captured;
+//            qDebug() << "time: " << time;
+//            qDebug() << "value: " << value;
+//            qDebug() << captured;
         }
     }
 
-    qDebug() << series->points();
+    //qDebug() << series->points();
 
 
 

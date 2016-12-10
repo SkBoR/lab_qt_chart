@@ -4,17 +4,24 @@
 #
 #-------------------------------------------------
 
-QT       += core gui charts
+QT       += core gui charts testlib
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = ChartLab
 TEMPLATE = app
 
+SUBDIRS += ChartLabTest
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    parser.cpp \
+    transientanalysisentity.cpp \
+    parseexception.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    parser.h \
+    transientanalysisentity.h \
+    parseexception.h
 
 FORMS    += mainwindow.ui
