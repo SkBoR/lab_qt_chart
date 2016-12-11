@@ -3,6 +3,28 @@
 
 #include <QMainWindow>
 
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QValueAxis>
+#include <QtCharts/QLogValueAxis>
+
+#include <QRegularExpression>
+#include <QDebug>
+#include <QFile>
+#include <QStringRef>
+#include <QList>
+#include <QStringList>
+#include "parser.h"
+#include "transientanalysisentity.h"
+#include <QListIterator>
+#include <QSplineSeries>
+#include <QFileDialog>
+
+#include <QVBoxLayout>
+
+
+using namespace QtCharts;
+
 namespace Ui {
 class MainWindow;
 }
@@ -17,6 +39,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+private slots:
+    void on_openFIleAction_triggered();
 };
 
 #endif // MAINWINDOW_H
