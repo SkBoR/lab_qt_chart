@@ -17,6 +17,10 @@ public:
     //TODO возможно лишнее
     void setGroupSize(int value);
 
+    void setHeaders(const QStringList &value);
+
+    QStringList getHeaders() const;
+
 private:
     int groupSize;
     QStringList headers;

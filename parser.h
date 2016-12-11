@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <transientanalysisentity.h>
 #include <QStringRef>
+#include <QStringListIterator>
 
 /**
  * @brief The Parser class

@@ -43,8 +43,11 @@ int main(int argc, char *argv[])
     QString result = in.readAll();
 
     Parser parser;
-    parser.parse(result);
-
+    try{
+        parser.parse(result);
+    } catch(ParseException &wrongString){
+        qDebug() << wrongString.getMessage();
+    }
 
     QStringRef *toParse;
     int indexValues = result.indexOf("VALUE");
