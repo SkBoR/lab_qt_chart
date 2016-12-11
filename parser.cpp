@@ -126,8 +126,6 @@ TransientAnalysisEntity Parser::parseHeader(TransientAnalysisEntity entity, QStr
     qDebug() << "Заголовок заполнен следующими значениями "<< entity.getHeaders();
     qDebug() << "что-то нашел";
 
-    //    trace.
-
     return entity;
 }
 
