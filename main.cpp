@@ -15,6 +15,7 @@
 #include "parser.h"
 #include "transientanalysisentity.h"
 #include <QListIterator>
+#include <QSplineSeries>
 
 using namespace QtCharts;
 
@@ -76,11 +77,9 @@ int main(int argc, char *argv[])
 
 
 
-    QChartView *chartView = new QChartView(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
 
     QValueAxis *axisX = new QValueAxis;
-    axisX->setLabelFormat("%f");
+    axisX->setLabelFormat("%.4e");
     axisX->setTitleText("Data point");
     axisX->setTickCount(6);
     chart->addAxis(axisX, Qt::AlignBottom);
@@ -94,27 +93,38 @@ int main(int argc, char *argv[])
     chart->addAxis(axisY, Qt::AlignLeft);
     //    series->attachAxis(axisY);
 
-    QHashIterator<QString, QList<QPointF>> iteratorPoint(entity.getPoints());
-    while(iteratorPoint.hasNext()){
-        iteratorPoint.next();
-        qDebug() << iteratorPoint.key() << " " << iteratorPoint.value().size();
+     QColor *test[5];// = new QColor[5];
+//     test[0]= new QColor(QColor::red);
+//     test[1]= new QColor(QColor::green);
+     test[2]= new QColor(42, 41,51);
+     test[3]= new QColor(41, 41,51);
+     test[4]= new QColor(41, 41,51);
+     int i = 0;
 
-        QLineSeries *series = new QLineSeries();
-        QListIterator<QPointF> valuesIterator(iterator.value());
-        while(valuesIterator.hasNext()){
-            series->append(valuesIterator.next());
-            //            qDebug()<< "add to series";
+    foreach (QString chartName, entity.getPoints().keys()) {
+        QList<QPointF> points = entity.getPoints().value(chartName);
+        qDebug() << chartName << " " << points.size();
+        QLineSeries *series = new  QLineSeries();
+
+        foreach (QPointF point, points) {
+            series->append(point);
+        }
+        if(i < 5){
+//            series->setColor(*test[i++]);
         }
 
         chart->addSeries(series);
-        qDebug() << "добавил в chart";
-        series->attachAxis(axisX);
-        series->attachAxis(axisY);
+        qDebug() << "добавил в chart" << iterator.key();
+        chart->setAxisX(axisX, series);
+        chart->setAxisY(axisY, series);
     }
 
     chart->setPlotAreaBackgroundBrush(prush);
     chart->setPlotAreaBackgroundVisible(true);
 
+
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
     QMainWindow window;
     window.setCentralWidget(chartView);
     window.resize(400, 300);
