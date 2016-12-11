@@ -26,45 +26,15 @@
    <property name="autoFillBackground">
     <bool>false</bool>
    </property>
-   <widget class="QFrame" name="verticalFrame">
-    <property name="geometry">
-     <rect>
-      <x>-1</x>
-      <y>-1</y>
-      <width>451</width>
-      <height>281</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>451</width>
-      <height>281</height>
-     </size>
-    </property>
-    <property name="autoFillBackground">
-     <bool>false</bool>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::Box</enum>
-    </property>
-    <layout class="QGridLayout" name="gridLayout">
-     <property name="sizeConstraint">
-      <enum>QLayout::SetDefaultConstraint</enum>
-     </property>
-     <item row="0" column="0">
-      <widget class="QStackedWidget" name="stackedWidget">
-       <widget class="QWidget" name="page"/>
-       <widget class="QWidget" name="page_2"/>
-      </widget>
-     </item>
-    </layout>
-   </widget>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QWidget" name="widget" native="true"/>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -88,14 +58,14 @@
     <property name="title">
      <string>Traces</string>
     </property>
-    <addaction name="actionScatter"/>
-    <addaction name="actionCombiner"/>
+    <addaction name="scatterAction"/>
+    <addaction name="combinerAction"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionInfo"/>
+    <addaction name="infoAction"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTraces"/>
@@ -106,25 +76,46 @@
    <property name="text">
     <string>Open</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
+   </property>
   </action>
   <action name="exitAction">
    <property name="text">
     <string>Exit</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::QuitRole</enum>
+   </property>
   </action>
-  <action name="actionScatter">
+  <action name="scatterAction">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Scatter</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
+   </property>
   </action>
-  <action name="actionCombiner">
+  <action name="combinerAction">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Combine</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
+   </property>
   </action>
-  <action name="actionInfo">
+  <action name="infoAction">
    <property name="text">
     <string>About</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::AboutRole</enum>
    </property>
   </action>
  </widget>

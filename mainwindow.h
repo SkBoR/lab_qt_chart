@@ -20,6 +20,7 @@
 #include <QSplineSeries>
 #include <QFileDialog>
 
+#include <QtWidgets>
 #include <QVBoxLayout>
 
 
@@ -39,9 +40,20 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    TransientAnalysisEntity *entity = NULL;
+    QColor *colorPreset[5];
+    QString readFile(QString file);
+    TransientAnalysisEntity parseData(QString toParse);
+
+    QBrush getBackgroundBrush();
+    QValueAxis *getAxisX();
+    QValueAxis *getAxisY();
+    QChart *getChart();
 
 private slots:
     void on_openFIleAction_triggered();
+    void on_combinerAction_triggered();
+    void on_scatterAction_triggered();
 };
 
 #endif // MAINWINDOW_H
