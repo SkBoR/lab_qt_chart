@@ -52,54 +52,35 @@ int main(int argc, char *argv[])
     } catch(ParseException &wrongString){
         qDebug() << wrongString.getMessage();
     }
-    qDebug() << entity.getHeaders();
-
-    QHashIterator<QString, QList<QPointF>> iterator(entity.getPoints());
-    while(iterator.hasNext()){
-        iterator.next();
-        qDebug() << iterator.key() << " " << iterator.value().size();
-    }
-
-    QStringRef *toParse;
-    int indexValues = result.indexOf("VALUE");
-    if(indexValues > -1){
-        toParse = new QStringRef(&result, indexValues, result.length() - indexValues);
-    } else {
-        //TODO сделать красиво
-        qDebug() <<" jflkdassssssssssssss";
-    }
 
     QChart *chart = new QChart();
-    //    chart->addSeries(series);
-    chart->legend()->hide();
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setTitle("Logarithmic axis example");
 
-
-
-
-
     QValueAxis *axisX = new QValueAxis;
-    axisX->setLabelFormat("%.4e");
-    axisX->setTitleText("Data point");
-    axisX->setTickCount(6);
+    axisX->setLabelFormat("%.3e");
+    axisX->setTitleText(entity.getSweep());
+//    axisX->setTickCount(6);
     chart->addAxis(axisX, Qt::AlignBottom);
-    //    series->attachAxis(axisX);
 
     QValueAxis *axisY = new QValueAxis;
     axisY->setLabelFormat("%f");
     axisY->setTitleText("Values");
-    axisY->setTickCount(6);
+//    axisY->setTickCount(6);
     //    axisY->setBase(8);
     chart->addAxis(axisY, Qt::AlignLeft);
-    //    series->attachAxis(axisY);
 
      QColor *test[5];// = new QColor[5];
-//     test[0]= new QColor(QColor::red);
-//     test[1]= new QColor(QColor::green);
-     test[2]= new QColor(42, 41,51);
-     test[3]= new QColor(41, 41,51);
-     test[4]= new QColor(41, 41,51);
+     test[0]= new QColor(Qt::red);
+     test[1]= new QColor(Qt::red);
+     test[2]= new QColor(Qt::blue);
+     test[3]= new QColor(Qt::yellow);
+     test[4]= new QColor(Qt::white);
      int i = 0;
+     //TODO а нужно ли?
+    float maxValue = std::numeric_limits<float>::min(),
+            minValue = std::numeric_limits<float>::max();
 
     foreach (QString chartName, entity.getPoints().keys()) {
         QList<QPointF> points = entity.getPoints().value(chartName);
@@ -109,12 +90,12 @@ int main(int argc, char *argv[])
         foreach (QPointF point, points) {
             series->append(point);
         }
+        series->setName(chartName);
         if(i < 5){
-//            series->setColor(*test[i++]);
+            series->setColor(*test[i++]);
         }
 
         chart->addSeries(series);
-        qDebug() << "добавил в chart" << iterator.key();
         chart->setAxisX(axisX, series);
         chart->setAxisY(axisY, series);
     }
@@ -125,6 +106,7 @@ int main(int argc, char *argv[])
 
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
+
     QMainWindow window;
     window.setCentralWidget(chartView);
     window.resize(400, 300);
