@@ -22,13 +22,13 @@ class Parser
 public:
     Parser();
     //TODO продумать что будет возвращать
-    void parse(QString toParse);
-
+    TransientAnalysisEntity parse(QString toParse);
 private:
-    QRegularExpression *valuesRegular; //("(?=\"time\")(?>.*\n){7}", QRegularExpression::MultilineOption);
     QRegularExpression *headerRegular;
-    static TransientAnalysisEntity parseHeader(TransientAnalysisEntity entity, QStringRef header);
-    static TransientAnalysisEntity parseValues(TransientAnalysisEntity entity, QStringRef values);
+    QRegularExpression *valuesRegular;
+
+    TransientAnalysisEntity parseHeader(TransientAnalysisEntity entity, QStringRef header);
+    TransientAnalysisEntity parseValues(TransientAnalysisEntity entity, QStringRef values);
 };
 
 #endif // PARSER_H

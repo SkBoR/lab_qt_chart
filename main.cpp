@@ -13,6 +13,8 @@
 #include <QList>
 #include <QStringList>
 #include "parser.h"
+#include "transientanalysisentity.h"
+#include <QListIterator>
 
 using namespace QtCharts;
 
@@ -28,7 +30,6 @@ int main(int argc, char *argv[])
     transform.scale(2.0,2.0);
     prush.setTransform(transform);
 
-    QRegExp regexp("(?=\"time\")(?>.*\n){7}(?=\"time\")");
 
 
     QRegularExpression regular("(?=\"time\")(?>.*\n){7}", QRegularExpression::MultilineOption);
@@ -43,10 +44,19 @@ int main(int argc, char *argv[])
     QString result = in.readAll();
 
     Parser parser;
+    TransientAnalysisEntity entity;
     try{
-        parser.parse(result);
+        TransientAnalysisEntity entityObj = parser.parse(result);
+        entity = entityObj;
     } catch(ParseException &wrongString){
         qDebug() << wrongString.getMessage();
+    }
+    qDebug() << entity.getHeaders();
+
+    QHashIterator<QString, QList<QPointF>> iterator(entity.getPoints());
+    while(iterator.hasNext()){
+        iterator.next();
+        qDebug() << iterator.key() << " " << iterator.value().size();
     }
 
     QStringRef *toParse;
@@ -55,47 +65,16 @@ int main(int argc, char *argv[])
         toParse = new QStringRef(&result, indexValues, result.length() - indexValues);
     } else {
         //TODO сделать красиво
-        return 1;
+        qDebug() <<" jflkdassssssssssssss";
     }
-
-    QRegularExpressionMatchIterator match = regular.globalMatch(*toParse);
-
-
-    QLineSeries *series = new QLineSeries();
-//        *series << QPointF(1, 1) << QPointF(2, 73) << QPointF(3, 268) << QPointF(4, 17) << QPointF(5, 4325) << QPointF(6, 723);
-
-
-    //TODO сделать уведомление о том что, что-то не распарсилось
-    while(match.hasNext()){
-        QRegularExpressionMatch localMatch = match.next();
-        if(localMatch.hasMatch()){
-            QString captured = localMatch.captured(0);
-
-            QStringList list = captured.split("\n");
-
-            QString timeValue = list.at(0).split(" ").at(1);
-            double time = timeValue.toDouble();
-
-            // TODO сделать для множества точек (не хардкод кол-во)
-            QString values = list.at(3);
-            double value = values.toDouble();
-//            *series << QPointF()
-                       series->append((float)time, (float)value);
-//            qDebug() << "time: " << time;
-//            qDebug() << "value: " << value;
-//            qDebug() << captured;
-        }
-    }
-
-    //qDebug() << series->points();
-
-
-
 
     QChart *chart = new QChart();
-    chart->addSeries(series);
+    //    chart->addSeries(series);
     chart->legend()->hide();
     chart->setTitle("Logarithmic axis example");
+
+
+
 
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
@@ -105,7 +84,7 @@ int main(int argc, char *argv[])
     axisX->setTitleText("Data point");
     axisX->setTickCount(6);
     chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
+    //    series->attachAxis(axisX);
 
     QValueAxis *axisY = new QValueAxis;
     axisY->setLabelFormat("%f");
@@ -113,7 +92,25 @@ int main(int argc, char *argv[])
     axisY->setTickCount(6);
     //    axisY->setBase(8);
     chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
+    //    series->attachAxis(axisY);
+
+    QHashIterator<QString, QList<QPointF>> iteratorPoint(entity.getPoints());
+    while(iteratorPoint.hasNext()){
+        iteratorPoint.next();
+        qDebug() << iteratorPoint.key() << " " << iteratorPoint.value().size();
+
+        QLineSeries *series = new QLineSeries();
+        QListIterator<QPointF> valuesIterator(iterator.value());
+        while(valuesIterator.hasNext()){
+            series->append(valuesIterator.next());
+            //            qDebug()<< "add to series";
+        }
+
+        chart->addSeries(series);
+        qDebug() << "добавил в chart";
+        series->attachAxis(axisX);
+        series->attachAxis(axisY);
+    }
 
     chart->setPlotAreaBackgroundBrush(prush);
     chart->setPlotAreaBackgroundVisible(true);

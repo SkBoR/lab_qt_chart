@@ -2,65 +2,50 @@
 
 Parser::Parser()
 {
-    headerRegular = new QRegularExpression("(?=HEADER)(.|\n)*?(?<=VALUE)", QRegularExpression::MultilineOption);
+    headerRegular = new QRegularExpression("(?=HEADER)(.|\n)*?(?<=VALUE)(?=VALUE)(.|\n)*?(?<=END)", QRegularExpression::MultilineOption);
     valuesRegular = new QRegularExpression("(?=\"time\")(?>.*\n){7}", QRegularExpression::MultilineOption);
 }
 
-void Parser::parse(QString toParse)
+TransientAnalysisEntity Parser::parse(QString toParse)
 {
     if(toParse.isEmpty()){
         throw ParseException("Нечего парсить");
     }
 
-    QRegularExpressionMatchIterator headerMatch = headerRegular->globalMatch(toParse);
-    if(headerMatch.hasNext()){
-        QRegularExpressionMatch match = headerMatch.next();
-        if(match.hasMatch()){
+//    QRegularExpressionMatchIterator headerMatch = headerRegular->globalMatch(toParse);
+//    if(headerMatch.hasNext()){
+//        QRegularExpressionMatch match = headerMatch.next();
+//        if(match.hasMatch()){
 
-            qDebug() << match.capturedRef().toString();
-            qDebug() << match.lastCapturedIndex();
-        }
-    } else {
-        qDebug() << "Header not found";
-        throw ParseException("HEADER не найден");
-    }
-    //ебашу как мудак
+//            qDebug() << match.capturedRef().toString();
+
+////            qDebug() << match.lastCapturedIndex();
+//        }
+//    } else {
+//        qDebug() << "Header not found";
+//        throw ParseException("HEADER не найден");
+//    }
+
+//    while(headerMatch.hasNext()){
+//        qDebug() << "----";
+//        qDebug() << headerMatch.next().capturedTexts();
+//    }
+
+    //ебашу как мудак, с регуляркой не срослось, поэтому оставлю как есть
     QStringRef *header;
     int indexValues = toParse.indexOf("VALUE");
     if(indexValues > 5){
         header = new QStringRef(&toParse, 0, indexValues + 5);
-        //        qDebug() << header->toString();
     } else {
         throw ParseException("VALUE не найден");
     }
 
-    TransientAnalysisEntity result = Parser::parseHeader(TransientAnalysisEntity(), *header);
+    TransientAnalysisEntity result = parseHeader(TransientAnalysisEntity(), *header);
 
     QStringRef *valuesString = new QStringRef(&toParse, indexValues - 5, toParse.size() - indexValues);
 
-    //TODO обработка значенией
-    QRegularExpressionMatchIterator match = valuesRegular->globalMatch(*valuesString);
-    //TODO сделать уведомление о том что, что-то не распарсилось
-    while(match.hasNext()){
-        QRegularExpressionMatch localMatch = match.next();
-        if(localMatch.hasMatch()){
-            QString captured = localMatch.captured(0);
-
-            QStringList list = captured.split("\n");
-
-            QString timeValue = list.at(0).split(" ").at(1);
-            double time = timeValue.toDouble();
-
-            // TODO сделать для множества точек (не хардкод кол-во)
-            QString values = list.at(3);
-            double value = values.toDouble();
-            //            *series << QPointF()
-            //                       series->append((float)time, (float)value);
-            //            qDebug() << "time: " << time;
-            //            qDebug() << "value: " << value;
-            //            qDebug() << captured;
-        }
-    }
+    result = parseValues(result, *valuesString);
+    return result;
 }
 
 TransientAnalysisEntity Parser::parseHeader(TransientAnalysisEntity entity, QStringRef header)
@@ -121,16 +106,77 @@ TransientAnalysisEntity Parser::parseHeader(TransientAnalysisEntity entity, QStr
         }
 
         entity.setHeaders(chartHeader);
+        entity.setGroupSize(chartHeader.size());
     }
 
-    qDebug() << "Заголовок заполнен следующими значениями "<< entity.getHeaders();
-    qDebug() << "что-то нашел";
+    QRegularExpression sweepRegular("(?<=SWEEP\n)(\".*?\")(.|\n)*?(?=\nTRACE)", QRegularExpression::MultilineOption);
+
+    match = sweepRegular.match(header);
+    if(!match.hasMatch()){
+        throw ParseException("Не найден блок SWEEP");
+    }
+
+    if(match.capturedTexts().size() < 2 || (match.capturedTexts().size() == 1 && match.captured(1).isEmpty())){
+        throw ParseException("SWEEP не распознан");
+    }
+
+    QString sweepName = match.captured(1).replace("\"", "");
+    entity.setSweep(sweepName);
 
     return entity;
 }
 
-TransientAnalysisEntity Parser::parseValues(TransientAnalysisEntity entity, QStringRef values)
+TransientAnalysisEntity Parser::parseValues(TransientAnalysisEntity entity, QStringRef valuesString)
 {
+    if(valuesString.isEmpty()){
+        return entity;
+    }
+    QRegularExpressionMatchIterator match = valuesRegular->globalMatch(valuesString);
+
+    QHash<QString, QList<QPointF>> values;
+
+    //init map values;
+    QStringListIterator headerIterator(entity.getHeaders());
+    while(headerIterator.hasNext()){
+        values.insert(headerIterator.next(), QList<QPointF>());
+    }
+
+    while(match.hasNext()){
+        QRegularExpressionMatch localMatch = match.next();
+        if(localMatch.hasMatch()){
+            QString captured = localMatch.captured(0);
+
+            QStringList list = localMatch.captured(0).split("\n");
+            if(list.size() < entity.getGroupSize() + 2){
+                throw ParseException("Ошибка парсинга значений, не достаточно значений");
+            }
+
+            QString timeValue = list.at(0).split(" ").at(1);
+            bool check = false;
+            float time = timeValue.toFloat(&check);
+            if(!check){
+                throw ParseException("Не распозналось значение времение");
+            }
+
+            for(int count = 2; count < entity.getGroupSize() + 2; count ++){
+                QString chartName = entity.getHeaders().at(count - 2);
+                float value = list.at(count).toFloat(&check);
+                if(!check){
+                    throw ParseException("Не распознано значение переменной");
+                }
+                QList<QPointF> points = values.value(chartName);
+                points.push_back(QPointF(time, value));
+                values.insert(chartName, points);
+            }
+        }
+    }
+    entity.setPoints(values);
+
+    QHashIterator<QString, QList<QPointF>> iterator(values);
+    while(iterator.hasNext()){
+        iterator.next();
+//        qDebug() << iterator.key() << " " << iterator.value().size();
+    }
     return entity;
 }
 

@@ -2,7 +2,7 @@
 
 TransientAnalysisEntity::TransientAnalysisEntity()
 {
-
+    groupSize = -1;
 }
 
 int TransientAnalysisEntity::getGroupSize() const
@@ -23,4 +23,24 @@ void TransientAnalysisEntity::setHeaders(const QStringList &value)
 QStringList TransientAnalysisEntity::getHeaders() const
 {
     return headers;
+}
+
+QString TransientAnalysisEntity::getSweep() const
+{
+    return sweep;
+}
+
+void TransientAnalysisEntity::setSweep(const QString &value)
+{
+    sweep = value;
+}
+
+QHash<QString, QList<QPointF> > TransientAnalysisEntity::getPoints() const
+{
+    return points;
+}
+
+void TransientAnalysisEntity::setPoints(const QHash<QString, QList<QPointF> > &value)
+{
+    points = value;
 }
