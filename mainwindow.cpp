@@ -18,8 +18,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QString result = readFile(file);
     TransientAnalysisEntity entity =  parseData(result);
     this->entity = &entity;
-    on_combinerAction_triggered();
-//    on_scatterAction_triggered();
+    drawCombine();
+    drawScatter();
+
+
+//    on_combinerAction_triggered();
+    on_scatterAction_triggered();
 }
 
 MainWindow::~MainWindow()  
@@ -79,7 +83,7 @@ QValueAxis *MainWindow::getAxisX()
 QValueAxis *MainWindow::getAxisY()
 {
     QValueAxis *axisY = new QValueAxis;
-    axisY->setLabelFormat("%.2");
+    axisY->setLabelFormat("%.3e");
     axisY->setTitleText("Values");
     return axisY;
 }
@@ -89,22 +93,73 @@ QChart *MainWindow::getChart()
     QChart *chart = new QChart();
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
-    chart->setTitle("Logarithmic axis example");
+    chart->setMargins(QMargins(1,1, 1, 1));
+    chart->setBackgroundBrush(QBrush(QColor(239,240,241)));
     return chart;
 }
 
-void MainWindow::on_openFIleAction_triggered()
+void MainWindow::drawScatter()
 {
-    QString file = QFileDialog::getOpenFileName(this,
-                                                tr("Open file"), "/home/ssr", tr("Tr0 Files (*.tr0)"));
-    qDebug() << "open file" << file;
-    QString result = readFile(file);
-    TransientAnalysisEntity entity =  parseData(result);
-    this->entity = &entity;
-    on_combinerAction_triggered();
+    if(entity == NULL){
+        return;
+    }
+
+    int i = 0;
+    QVBoxLayout *layout = new QVBoxLayout;
+    ui->scrollAreaWidgetContents->setLayout(layout);
+
+    foreach (QString chartName, entity->getHeaders()) {
+        QChart *chart = getChart();
+
+        QValueAxis *axisX = getAxisX();
+        chart->addAxis(axisX, Qt::AlignBottom);
+
+        QValueAxis *axisY = getAxisY();
+        chart->addAxis(axisY, Qt::AlignLeft);
+
+        float maxValue = std::numeric_limits<float>::min(),
+                minValue = std::numeric_limits<float>::max();
+
+        QList<QPointF> points = entity->getPoints().value(chartName);
+        qDebug() << chartName << " " << points.size();
+        QLineSeries *series = new  QLineSeries();
+
+        foreach (QPointF point, points) {
+            maxValue = maxValue < point.y() ? point.y() : maxValue;
+            minValue = minValue > point.y() ? point.y() : minValue;
+            series->append(point);
+        }
+        series->setName(chartName);
+        if(i < 5){
+            series->setColor(*colorPreset[i++]);
+        }
+
+        chart->addSeries(series);
+        chart->setAxisX(axisX, series);
+        //    ui->page->hide();
+        chart->setAxisY(axisY, series);
+        double delta = maxValue - minValue;
+        axisY->setRange(minValue - delta * 0.08, maxValue + delta * 0.08);
+
+        chart->setPlotAreaBackgroundBrush(getBackgroundBrush());
+        chart->setPlotAreaBackgroundVisible(true);
+
+
+        QChartView *chartView = new QChartView(chart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+
+        QVBoxLayout *layout2 = new QVBoxLayout;
+        layout2->addWidget(chartView);
+        layout2->setMargin(0);
+        layout2->setSpacing(0);
+        QWidget *widget = new QWidget();
+        widget->setLayout(layout2);
+        widget->setMinimumHeight(800);
+        layout->addWidget(widget);
+    }
 }
 
-void MainWindow::on_combinerAction_triggered()
+void MainWindow::drawCombine()
 {
     if(entity == NULL){
         return;
@@ -152,71 +207,32 @@ void MainWindow::on_combinerAction_triggered()
 
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(chartView);
-    QWidget *widget = new QWidget();
-    widget->setLayout(layout);
-    this->setCentralWidget(widget);
+    layout->setMargin(0);
+    layout->setSpacing(0);
+    ui->widget->setLayout(layout);
+}
+
+void MainWindow::on_openFIleAction_triggered()
+{
+    QString file = QFileDialog::getOpenFileName(this,
+                                                tr("Open file"), "/home/ssr", tr("Tr0 Files (*.tr0)"));
+    qDebug() << "open file" << file;
+    QString result = readFile(file);
+    TransientAnalysisEntity entity =  parseData(result);
+    this->entity = &entity;
+    drawCombine();
+    drawScatter();
+    on_combinerAction_triggered();
+}
+
+void MainWindow::on_combinerAction_triggered()
+{
+    ui->scrollArea->hide();
+    ui->widget->show();
 }
 
 void MainWindow::on_scatterAction_triggered()
 {
-    if(entity == NULL){
-        return;
-    }
-
-    int i = 0;
-
-    QWidget *widget = new QWidget();
-    QScrollArea *scroll = new QScrollArea;
-    QVBoxLayout *layout = new QVBoxLayout;
-    widget->setLayout(layout);
-
-    scroll->setWidget(widget);
-
-//    scroll->setWidgetResizable(true);
-
-    foreach (QString chartName, entity->getHeaders()) {
-        QChart *chart = getChart();
-
-        QValueAxis *axisX = getAxisX();
-        chart->addAxis(axisX, Qt::AlignBottom);
-
-        QValueAxis *axisY = getAxisY();
-        chart->addAxis(axisY, Qt::AlignLeft);
-
-        float maxValue = std::numeric_limits<float>::min(),
-                minValue = std::numeric_limits<float>::max();
-
-        QList<QPointF> points = entity->getPoints().value(chartName);
-        qDebug() << chartName << " " << points.size();
-        QLineSeries *series = new  QLineSeries();
-
-        foreach (QPointF point, points) {
-            maxValue = maxValue < point.y() ? point.y() : maxValue;
-            minValue = minValue > point.y() ? point.y() : minValue;
-            series->append(point);
-        }
-        series->setName(chartName);
-        if(i < 5){
-            series->setColor(*colorPreset[i++]);
-        }
-
-        chart->addSeries(series);
-        chart->setAxisX(axisX, series);
-        chart->setAxisY(axisY, series);
-        double delta = maxValue - minValue;
-        axisY->setRange(minValue - delta * 0.08, maxValue + delta * 0.08);
-
-        chart->setPlotAreaBackgroundBrush(getBackgroundBrush());
-        chart->setPlotAreaBackgroundVisible(true);
-
-        QChartView *chartView = new QChartView(chart);
-        chartView->setRenderHint(QPainter::Antialiasing);
-
-        layout->addWidget(chartView);
-    }
-
-
-//    widget->setLayout(scrollArea);
-//    scrollArea->setWidget(layout);
-    this->setCentralWidget(widget);
+    ui->widget->hide();
+    ui->scrollArea->show();
 }

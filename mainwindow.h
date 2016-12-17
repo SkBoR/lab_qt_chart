@@ -49,6 +49,8 @@ private:
     QValueAxis *getAxisX();
     QValueAxis *getAxisY();
     QChart *getChart();
+    void drawScatter();
+    void drawCombine();
 
 private slots:
     void on_openFIleAction_triggered();
