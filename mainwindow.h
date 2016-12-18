@@ -22,6 +22,8 @@
 
 #include <QtWidgets>
 #include <QVBoxLayout>
+#include "detaildialog.h"
+#include "aboutdialog.h"
 
 
 using namespace QtCharts;
@@ -40,8 +42,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    TransientAnalysisEntity *entity = NULL;
-    QColor *colorPreset[5];
+    TransientAnalysisEntity entity;
     QString readFile(QString file);
     TransientAnalysisEntity parseData(QString toParse);
 
@@ -49,13 +50,15 @@ private:
     QValueAxis *getAxisX();
     QValueAxis *getAxisY();
     QChart *getChart();
-    void drawScatter();
-    void drawCombine();
+    void drawScatterCharts();
+    void drawCombineCharts();
 
 private slots:
     void on_openFIleAction_triggered();
     void on_combinerAction_triggered();
     void on_scatterAction_triggered();
+    void on_chartsInfoAction_triggered();
+    void on_infoAction_triggered();
 };
 
 #endif // MAINWINDOW_H

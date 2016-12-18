@@ -44,3 +44,16 @@ void TransientAnalysisEntity::setPoints(const QHash<QString, QList<QPointF> > &v
 {
     points = value;
 }
+
+QColor TransientAnalysisEntity::getChartColor(QString chartName) const
+{
+    if(chartColor.contains(chartName)){
+        return chartColor.value(chartName);
+    }
+    return QColor(Qt::black);
+}
+
+void TransientAnalysisEntity::setChartColor(QString chartName, QColor color)
+{
+    chartColor.insert(chartName, color);
+}

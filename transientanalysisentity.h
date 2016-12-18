@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QList>
 #include <QPointF>
+#include <QColor>
 
 class TransientAnalysisEntity
 {
@@ -27,11 +28,15 @@ public:
     QHash<QString, QList<QPointF> > getPoints() const;
     void setPoints(const QHash<QString, QList<QPointF> > &value);
 
+    QColor getChartColor(QString chartName) const;
+    void setChartColor(QString chartName, QColor color);
+
 private:
     int groupSize;
     QStringList headers;
     QString sweep;
     QHash<QString, QList<QPointF>> points;
+    QHash<QString, QColor> chartColor;
 };
 
 #endif // TRANSIENTANALYSISENTITY_H

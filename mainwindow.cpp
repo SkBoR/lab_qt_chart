@@ -7,23 +7,19 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    this->colorPreset[0]= new QColor(Qt::red);
-    this->colorPreset[1]= new QColor(Qt::green);
-    this->colorPreset[2]= new QColor(Qt::blue);
-    this->colorPreset[3]= new QColor(Qt::yellow);
-    this->colorPreset[4]= new QColor(Qt::white);
-
     QString file("/home/ssr/Programming/Qt_project/ChartLab/input/inv.tr0");
     qDebug() << "open file" << file;
     QString result = readFile(file);
-    TransientAnalysisEntity entity =  parseData(result);
-    this->entity = &entity;
-    drawCombine();
-    drawScatter();
+    if(!result.isEmpty()){
+        this->entity = parseData(result);
+        drawCombineCharts();
+        drawScatterCharts();
+    }
 
 
-//    on_combinerAction_triggered();
+    //    on_combinerAction_triggered();
     on_scatterAction_triggered();
+
 }
 
 MainWindow::~MainWindow()  
@@ -57,7 +53,6 @@ TransientAnalysisEntity MainWindow::parseData(QString toParse)
         QMessageBox::warning(this, QString("Ошибка парсинга"), QString(wrongString.getMessage()), QMessageBox::Ok);
         qDebug() << wrongString.getMessage();
     }
-    this->entity = &entity;
     return entity;
 }
 
@@ -76,7 +71,7 @@ QValueAxis *MainWindow::getAxisX()
 {
     QValueAxis *axisX = new QValueAxis;
     axisX->setLabelFormat("%.3e");
-    axisX->setTitleText(entity->getSweep());
+    axisX->setTitleText(entity.getSweep());
     return axisX;
 }
 
@@ -98,17 +93,16 @@ QChart *MainWindow::getChart()
     return chart;
 }
 
-void MainWindow::drawScatter()
+void MainWindow::drawScatterCharts()
 {
-    if(entity == NULL){
+    if(entity.getHeaders().size() == 0){
         return;
     }
 
-    int i = 0;
     QVBoxLayout *layout = new QVBoxLayout;
     ui->scrollAreaWidgetContents->setLayout(layout);
 
-    foreach (QString chartName, entity->getHeaders()) {
+    foreach (QString chartName, entity.getHeaders()) {
         QChart *chart = getChart();
 
         QValueAxis *axisX = getAxisX();
@@ -120,7 +114,7 @@ void MainWindow::drawScatter()
         float maxValue = std::numeric_limits<float>::min(),
                 minValue = std::numeric_limits<float>::max();
 
-        QList<QPointF> points = entity->getPoints().value(chartName);
+        QList<QPointF> points = entity.getPoints().value(chartName);
         qDebug() << chartName << " " << points.size();
         QLineSeries *series = new  QLineSeries();
 
@@ -130,15 +124,18 @@ void MainWindow::drawScatter()
             series->append(point);
         }
         series->setName(chartName);
-        if(i < 5){
-            series->setColor(*colorPreset[i++]);
-        }
+        series->setColor(entity.getChartColor(chartName));
 
         chart->addSeries(series);
         chart->setAxisX(axisX, series);
         //    ui->page->hide();
         chart->setAxisY(axisY, series);
         double delta = maxValue - minValue;
+        if(delta < 0.000001){
+            delta = 5;
+            maxValue = 5;
+            minValue = 0;
+        }
         axisY->setRange(minValue - delta * 0.08, maxValue + delta * 0.08);
 
         chart->setPlotAreaBackgroundBrush(getBackgroundBrush());
@@ -159,9 +156,9 @@ void MainWindow::drawScatter()
     }
 }
 
-void MainWindow::drawCombine()
+void MainWindow::drawCombineCharts()
 {
-    if(entity == NULL){
+    if(entity.getHeaders().size() == 0){
         return;
     }
 
@@ -173,12 +170,11 @@ void MainWindow::drawCombine()
     QValueAxis *axisY = getAxisY();
     chart->addAxis(axisY, Qt::AlignLeft);
 
-    int i = 0;
     float maxValue = std::numeric_limits<float>::min(),
             minValue = std::numeric_limits<float>::max();
 
-    foreach (QString chartName, entity->getHeaders()) {
-        QList<QPointF> points = entity->getPoints().value(chartName);
+    foreach (QString chartName, entity.getHeaders()) {
+        QList<QPointF> points = entity.getPoints().value(chartName);
         qDebug() << chartName << " " << points.size();
         QLineSeries *series = new  QLineSeries();
 
@@ -188,9 +184,8 @@ void MainWindow::drawCombine()
             series->append(point);
         }
         series->setName(chartName);
-        if(i < 5){
-            series->setColor(*colorPreset[i++]);
-        }
+
+        series->setColor(entity.getChartColor(chartName));
 
         chart->addSeries(series);
         chart->setAxisX(axisX, series);
@@ -218,10 +213,9 @@ void MainWindow::on_openFIleAction_triggered()
                                                 tr("Open file"), "/home/ssr", tr("Tr0 Files (*.tr0)"));
     qDebug() << "open file" << file;
     QString result = readFile(file);
-    TransientAnalysisEntity entity =  parseData(result);
-    this->entity = &entity;
-    drawCombine();
-    drawScatter();
+    this->entity = parseData(result);
+    drawCombineCharts();
+    drawScatterCharts();
     on_combinerAction_triggered();
 }
 
@@ -235,4 +229,20 @@ void MainWindow::on_scatterAction_triggered()
 {
     ui->widget->hide();
     ui->scrollArea->show();
+}
+
+void MainWindow::on_chartsInfoAction_triggered()
+{
+    if(this->entity.getHeaders().size() == 0){
+        QMessageBox::warning(this, QString("Нет графика"), QString("Сначала загрузите график"), QMessageBox::Ok);
+    } else {
+        DetailDialog *detail = new DetailDialog(this, entity);
+        detail->show();
+    }
+}
+
+void MainWindow::on_infoAction_triggered()
+{
+    AboutDIalog *aboutDialog = new AboutDIalog(this);
+    aboutDialog->show();
 }

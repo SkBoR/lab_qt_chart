@@ -10,8 +10,6 @@ TYPE
 "key" "branch"
 )
 "sweep" FLOAT DOUBLE
-SWEEP
-"time" "sweep"
 TRACE
 "group" GROUP 5
 "v(vdd)" "node"
@@ -19,6 +17,8 @@ TRACE
 "v(vout)" "node"
 "i1(c1)" "branch"
 "i2(m1)" "branch"
+SWEEP
+"time" "sweep"
 VALUE
 "time" 0.000000e+000
 "group"

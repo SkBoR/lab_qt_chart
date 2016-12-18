@@ -17,11 +17,22 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     parser.cpp \
     transientanalysisentity.cpp \
-    parseexception.cpp
+    parseexception.cpp \
+    detaildialog.cpp \
+    colormanager.cpp \
+    aboutdialog.cpp
 
 HEADERS  += mainwindow.h \
     parser.h \
     transientanalysisentity.h \
-    parseexception.h
+    parseexception.h \
+    detaildialog.h \
+    colormanager.h \
+    aboutdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    detaildialog.ui \
+    aboutdialog.ui
+
+RESOURCES += \
+    resources.qrc

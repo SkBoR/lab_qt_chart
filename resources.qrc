@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/marvin.png</file>
+    </qresource>
+</RCC>

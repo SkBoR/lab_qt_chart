@@ -48,14 +48,19 @@ TransientAnalysisEntity Parser::parse(QString toParse)
     return result;
 }
 
+void Parser::setColorManager(ColorManager *colorManager)
+{
+    this->colorManager = colorManager;
+}
+
 TransientAnalysisEntity Parser::parseHeader(TransientAnalysisEntity entity, QStringRef header)
 {
     if(header == NULL || header.isEmpty()){
         throw ParseException("HEADER пуст");
     }
-    QRegularExpression regular("(?<=TRACE\n)(.|\n)*?(?=\nVALUE)",QRegularExpression::MultilineOption);
+    QRegularExpression regular("(?<=TRACE\n)(.|\n)*?(?=\n(?>VALUE|TYPE|SWEEP))",QRegularExpression::MultilineOption);
 
-    QRegularExpressionMatch match = regular.match(header.toString());
+    QRegularExpressionMatch match = regular.match(header);
     if(!match.hasMatch()){
         throw ParseException("Не содержится блока TRACE ... VALUE");
     }
@@ -91,6 +96,9 @@ TransientAnalysisEntity Parser::parseHeader(TransientAnalysisEntity entity, QStr
         if(groupSize < 0){
             throw ParseException("Размер GROUP меньше 0");
         }
+        if(groupSize - 1 > lines.size()){
+            throw ParseException("Ошибка в размере GROUP");
+        }
         QStringList chartHeader;
         for(int count = 1; count < groupSize + 1; count ++){
             QString line = lines.at(count);
@@ -102,14 +110,16 @@ TransientAnalysisEntity Parser::parseHeader(TransientAnalysisEntity entity, QStr
             if(chartName.isEmpty()){
                 throw ParseException("Ошибка распознования названия графика, он пустой, строка " + QString::number(count) + " TRACE блок");
             }
-            chartHeader.push_back(chartName.replace("\"", ""));
+            QString name = chartName.replace("\"", "");
+            entity.setChartColor(name, colorManager->getColor(count - 1));
+            chartHeader.push_back(name);
         }
 
         entity.setHeaders(chartHeader);
         entity.setGroupSize(chartHeader.size());
     }
 
-    QRegularExpression sweepRegular("(?<=SWEEP\n)(\".*?\")(.|\n)*?(?=\nTRACE)", QRegularExpression::MultilineOption);
+    QRegularExpression sweepRegular("(?<=SWEEP\n)(\".*?\")(.|\n)*?(?=\n(?>VALUE|TYPE|SWEEP))", QRegularExpression::MultilineOption);
 
     match = sweepRegular.match(header);
     if(!match.hasMatch()){
@@ -131,6 +141,8 @@ TransientAnalysisEntity Parser::parseValues(TransientAnalysisEntity entity, QStr
     if(valuesString.isEmpty()){
         return entity;
     }
+    QRegularExpression *valuesRegular = new QRegularExpression("(?=\"time\")(?>.*\n){" + QString::number(entity.getHeaders().size() + 2) + "}", QRegularExpression::MultilineOption);
+
     QRegularExpressionMatchIterator match = valuesRegular->globalMatch(valuesString);
 
     QHash<QString, QList<QPointF>> values;
@@ -144,7 +156,6 @@ TransientAnalysisEntity Parser::parseValues(TransientAnalysisEntity entity, QStr
     while(match.hasNext()){
         QRegularExpressionMatch localMatch = match.next();
         if(localMatch.hasMatch()){
-            QString captured = localMatch.captured(0);
 
             QStringList list = localMatch.captured(0).split("\n");
             if(list.size() < entity.getGroupSize() + 2){
@@ -175,7 +186,6 @@ TransientAnalysisEntity Parser::parseValues(TransientAnalysisEntity entity, QStr
     QHashIterator<QString, QList<QPointF>> iterator(values);
     while(iterator.hasNext()){
         iterator.next();
-//        qDebug() << iterator.key() << " " << iterator.value().size();
     }
     return entity;
 }
